@@ -1,5 +1,24 @@
 from google.adk.agents import Agent
 
+def find_features(topic: str) -> dict:
+    """
+    Tool to return a list of popular features for a given tech topic.
+    The LLM will generate the actual feature list.
+    """
+    return {
+        "status": "success",
+        "prompt": f"""
+You're a tech analyst. Your task is to find the most useful or popular features of the tool/platform "{topic}".
+
+❗ Return only a clean Python list of feature names — no description, no explanation.
+
+✅ Example:
+Input: GitHub
+Output: ['Pull Requests', 'GitHub Actions', 'Code Review', 'GitHub Pages', 'Issue Tracking']
+"""
+    }
+
+
 def generate_script(topic: str, feature: str) -> dict:
     """
     Generates a YouTube Shorts-style Hinglish script about a tech feature.
@@ -12,7 +31,7 @@ def generate_script(topic: str, feature: str) -> dict:
         dict: Contains status and the script text.
     """
     prompt = f"""
-Write a YouTube Shorts-style script (under 60 seconds) with two Delhi college students, Nik & Sid, casually discussing "{feature}" in "{topic}".
+Write a YouTube Shorts-style script (under 60 seconds) with two college students, Nik & Sid, casually discussing "{feature}" in "{topic}".
 
 Instructions:
 🗣️ Use chill Hinglish tone (e.g., "bhai", "scene kya hai", "sach me?", "mast chiz hai").
@@ -24,16 +43,21 @@ Instructions:
 
     return {
         "status": "success",
-        "script": prompt  # The agent will fill in the Gemini LLM response
+        "script": prompt
     }
 
-# Root Agent definition (model handles tool prompts)
 root_agent = Agent(
-    name="Delhi_Tech_Dost",
-    model="gemini-1.5-flash",  # This is all you need to define the model
+    name="Tech_Dost",
+    model="gemini-1.5-flash",
     description="An AI agent that explains tech features in a Hinglish YouTube Shorts format.",
-    instruction="You're Nik and Sid — chill Delhi students. Create funny, Hinglish YouTube Shorts-style convos about tech topics.",
-    tools=[generate_script],  # ADK will auto-handle LLM prompting from tool output
+    instruction="""
+    Step 1: When user enters a topic, call the 'find_features' tool to fetch feature list.
+    Step 2: Show feature list to user. Let the user pick one manually.
+    Step 3: After selection, store selected feature in memory under user ID.
+    Step 4: When needed, retrieve the feature from memory to continue script generation.
+    You're Nik and Sid — chill students. Create funny, Hinglish YouTube Shorts-style convos about tech topics.
+    """,
+    tools=[find_features, generate_script],
 )
 
 # import datetime
